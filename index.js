@@ -3,8 +3,13 @@ import dotenv from "dotenv";
 import fs from "fs";
 import colors from "./colors.json" assert { type: "json" };
 import https from "https";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: __dirname + "/.env"})
 
 const browser = await pptr.launch({
   headless: false,
