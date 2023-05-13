@@ -89,7 +89,8 @@ console.log(`Downloading ${targetServer}...`);
 
 await new Promise((resolve, reject) => {
   const fileStream = fs.createWriteStream(path);
-  https.get(vpnLinks[0].href, (response) => {
+  const target = vpnLinks.find((link) => link.text == targetServer);
+  https.get(target.href, (response) => {
     response.pipe(fileStream);
 
     fileStream.on("finish", () => {
