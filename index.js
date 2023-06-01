@@ -9,7 +9,7 @@ import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: __dirname + "/.env"})
+dotenv.config({ path: __dirname + "/.env" });
 
 const browser = await pptr.launch({
   headless: false,
@@ -61,6 +61,17 @@ await Promise.all([
   page.waitForNavigation(),
 ]);
 
+const info = await page.$eval("table tbody tr:nth-child(1)", (row) => {
+  const createdDate = row.querySelector("td:nth-child(4)").textContent;
+  const duration = row.querySelector("td:nth-child(5)").textContent;
+  return { createdDate, duration };
+});
+
+const createdDate = new Date(info.createdDate);
+const expiredDate = new Date(
+  createdDate.getTime() + +info.duration * 60 * 1000
+);
+
 const vpnLinks = await page.$eval("table tbody tr:nth-child(1)", (row) => {
   const linksEl = Array.from(row.querySelectorAll("td a"));
   const links = [];
@@ -82,12 +93,12 @@ for (let link of vpnLinks) {
 
 const targetServer = "Server2";
 const cwd = process.cwd();
-const path = `${cwd}/${targetServer}.zip`;
 
 console.log("\n\n-- Download --");
 console.log(`Downloading ${targetServer}...`);
 
 await new Promise((resolve, reject) => {
+  const path = `${cwd}/${targetServer}.zip`;
   const fileStream = fs.createWriteStream(path);
   const target = vpnLinks.find((link) => link.text == targetServer);
   https.get(target.href, (response) => {
@@ -95,11 +106,25 @@ await new Promise((resolve, reject) => {
 
     fileStream.on("finish", () => {
       fileStream.close();
-      console.log("Download finished")
+      console.log("Download finished");
       console.log(`File downloaded: ${path}`);
       resolve();
     });
   });
+});
+
+await new Promise((resolve, reject) => {
+  const path = `${cwd}/expired.txt`;
+  const fileStream = fs.createWriteStream(path);
+
+  fileStream.write(`Created: ${createdDate}\n`);
+  fileStream.write(`Expired: ${expiredDate}\n`);
+
+  fileStream.close();
+  console.log(`Created: ${createdDate}`);
+  console.log(`Expired: ${expiredDate}`);
+  console.log(`File written: ${path}`);
+  resolve();
 });
 
 await browser.close();

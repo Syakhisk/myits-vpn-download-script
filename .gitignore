@@ -1,6 +1,7 @@
 node_modules
 .env
 *.zip
+expired.txt
 # lockfiles
 package-lock.json
 pnpm-lock.yaml
